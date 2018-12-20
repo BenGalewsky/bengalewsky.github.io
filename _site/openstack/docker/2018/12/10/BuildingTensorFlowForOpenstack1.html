@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="Ben Galewsky" property="og:site_name">
+
+  <meta content="Building Tensorflow Docker Image for Openstack" property="og:title">
+
+
+  <meta content="article" property="og:type">
+
+
+  <meta content="<h1>Development Blog</h1><h3>Research Programmer NCSA</h3>" property="og:description">
+
+
+  <meta content="http://localhost:4000/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html" property="og:url">
+
+
+  <meta content="2018-12-10T10:31:43-06:00" property="article:published_time">
+  <meta content="http://localhost:4000/about/" property="article:author">
+
+
+  <meta property="og:image" content="">
+
+
+  
+  <meta content="openstack" property="article:section">
+  
+
+
+  
+
+  <title>Building Tensorflow Docker Image for Openstack</title>
+  <meta name="description" content="With the many layers of virtualization, it’s easy to forget that docker imagesultimately run on a real CPU with its own architecture and characteristics. Thi...">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/css/main.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+  <link href='https://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Mono' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,200,300,500,600,700,900' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Gentium+Basic:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Alegreya:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500,700' rel='stylesheet' type='text/css'>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-hQpvDQiCJaD2H465dQfA717v7lu5qHWtDbWNPvaTJ0ID5xnPUlVXnKzq7b8YUkbN" crossorigin="anonymous">
+  <link rel="canonical" href="http://localhost:4000/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html">
+  <link rel="alternate" type="application/rss+xml" title="Ben Galewsky" href="http://localhost:4000/feed.xml">
+</head>
+
+
+  <body>
+
+<section>
+<nav class="navbar navbar-default navbar-fixed-top">
+
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Ben Galewsky</a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        
+        <li><a href="/about/">About</a></li>
+
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+
+
+      </ul>
+
+    <!--  <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Know More!</a></li>
+
+      </ul>-->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+</section>
+
+<section>
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="post-title-main" itemprop="name headline">Building Tensorflow Docker Image for Openstack</h1>
+      <p class="post-meta"><time datetime="2018-12-10T10:31:43-06:00" itemprop="datePublished">Dec 10, 2018</time> • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">BenGalewsky</span></span></p>
+      
+    </div>
+
+</div>
+
+
+  <div class="post-content container" itemprop="articleBody">
+    <p>With the many layers of virtualization, it’s easy to forget that docker images
+ultimately run on a real CPU with its own architecture and characteristics. This
+is usually not an issue, except when the code in the image makes assumptions about
+that CPU. The Tensorflow library makes use of whatever hardware acceleration
+is available. It is quite sensitive to the hardware the image is built on.</p>
+
+<p>I discovered this when trying to deploy a colleague’s Tensorflow application on
+our OpenStack cluster. I was using the <code class="highlighter-rouge">tensorflow/tensorflow</code> Docker image.
+When I attempted to run it, it simply printed out the error:</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Illegal instruction     (core dumped) python3 ./${MAIN_SCRIPT}
+</code></pre></div></div>
+
+<p>This is caused by the standard images being built to take advantage of the AVX2 instruction
+set. Since Tensorflow 1.6 the pre-built binaries assume the CPU supports those instructions.</p>
+
+<p>This post describes how I compiled Tensorflow for the specific hardware backing
+our OpenStack and deployed my application via docker.</p>
+
+<h1 id="build-tensorflow-locally">Build Tensorflow Locally</h1>
+<p>Tensorflow is a big and complicated system. Compiling it depends on a large number
+of dependencies and specialized build tools. Fortunately, the community has created a handy 
+dockerized process to help with this build.</p>
+
+<ul>
+  <li>Create a VM on the OpenStack cluster. I used an Ubuntu 16.0.2 image.</li>
+  <li>Install:
+    <ul>
+      <li>git</li>
+      <li>docker</li>
+      <li>docker-compose</li>
+    </ul>
+  </li>
+  <li>Make sure the ubuntu user has
+<a href="https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user">permission to run docker commands</a>.</li>
+  <li>Log into the VM and checkout a copy of my fork of Hadrian Mary’s <a href="https://github.com/BenGalewsky/docker-tensorflow-builder">tensorflow-builder</a></li>
+  <li>For now use my <code class="highlighter-rouge">ncsa_openstack</code> branch. <a href="https://github.com/hadim/docker-tensorflow-builder/pull/13">Pull Request</a> is in progress</li>
+  <li>As per the <a href="https://github.com/hadim/docker-tensorflow-builder/blob/master/README.md">README</a>…</li>
+</ul>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>tensorflow/ubuntu-16.04/
+
+<span class="c"># Build the Docker image</span>
+docker-compose build
+
+<span class="c"># Set env variables</span>
+<span class="nb">export </span><span class="nv">PYTHON_VERSION</span><span class="o">=</span>3.5
+<span class="nb">export </span><span class="nv">TF_VERSION_GIT_TAG</span><span class="o">=</span>v1.9.0
+<span class="nb">export </span><span class="nv">USE_GPU</span><span class="o">=</span>0
+
+<span class="c"># Start the compilation</span>
+docker-compose run tf
+
+<span class="c"># You can also do:</span>
+<span class="c"># docker-compose run tf bash</span>
+<span class="c"># bash build.sh</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Wait, wait, and wait some more… It’s a very long build time!</li>
+  <li>The wheel file for your architecture is sitting in the repositories wheels/ folder</li>
+</ul>
+
+<h1 id="create-a-docker-image">Create a Docker Image</h1>
+<p>As a final step, I created a Dockerfile based on a Python image which installs the Tensorflow wheel:</p>
+
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> python:3.5-stretch</span>
+<span class="k">COPY</span><span class="s"> tensorflow-1.9.0-cp35-cp35m-linux_x86_64.whl /</span>
+<span class="k">RUN  </span>pip install /tensorflow-1.9.0-cp35-cp35m-linux_x86_64.whl
+<span class="k">CMD</span><span class="s"> ["python3"]</span>
+</code></pre></div></div>
+
+
+  </div>
+
+</article>
+
+</section>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+  <div class="container footer-content">
+    DevJournal Theme by Hemang Kumar<br>
+    Powered By Jekyll
+  </div>
+</nav>
+
+  </body>
+
+</html>
