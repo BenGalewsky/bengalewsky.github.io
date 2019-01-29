@@ -61,7 +61,7 @@ dns_nameservers = ["141.142.2.2", "141.142.230.144"]
 external_network_id="xxxx-x-x-xxx-x-xxx"
 pool_name="ext-net"
 ```
-You will need to customize this to your needs. Take a look at the README for
+You will need to customize this to your needs. Take a look at the [README](https://github.com/nds-org/kubeadm-terraform/blob/master/README.md) for
 specifics of these variables. Basically, you need one or more worker nodes, an
 external IP address, and a storage node to host persistent volumes.
 
@@ -79,12 +79,16 @@ terraform apply --var-file=configs/myConfig.tfvars
 is not accessible from the outside world. You need to ssh into the master
 node. It has `kubectl` installed so you can start interacting with
 your cluster from there.
+```
+ssh -i ~/.ssh/cloud.key ubuntu@xxx.xx.xxx
+```
+
 
 6. The kubeadm process installs a helm chart called `support` which includes an
 ingress controller which would conflict with the traefik controller Reana
 requires. We'll just delete this chart.
 ```
-% helm delete support
+helm delete support
 ```
 
 # Install Traefik Ingress Controller
@@ -92,7 +96,7 @@ The ingress controller sits on the node that has an external IP address and
 routes inbound http requests to the reana service regardless of the node
 where it is running.
 
-With helm installation is quite simple. I wound up forking the helm chart as
+With helm, installation is quite simple. However, I wound up forking the helm chart as
 I couldn't see how the node selector settings worked as implemented to insure
 the controller runs on the node that has an external IP address.
 
@@ -100,9 +104,9 @@ the controller runs on the node that has an external IP address.
 ```
 sudo helm repo add openstack-traefik https://bengalewsky.github.io/openstack-traefik
 ```
-2. Use the OpenStack dashboard to look up: the Private Network IP and the
+2. Use the OpenStack dashboard to look up the Private Network IP and the
 public IP of the node that will serve as your gateway.
-3. Update your DNS record to add a wildcard A record that points to the external
+3. Update your DNS record to add a wildcard `A` record that points to the external
 IP address of this ingress node.
 4. Deploy traefik as:
 ```
@@ -115,7 +119,7 @@ sudo helm install openstack-traefik/traefik --name traefik-ingress-controller \
      --set acme.challengeType=http-01 \
      --set acme.staging=false
 ```
-Let's unpack this... Set the External IP to be the _private IP_ of your ingress
+Let's unpack this... Set the `externalIP` to be the _private IP_ of your ingress
 node. (It's called `externalIP` to distinguish it from the IP inside the
 Kubernetes overlay network). We are turning encryption with
 [LetsEncrypt](https://letsencrypt.org). Traefik will coordinate with that service
@@ -147,14 +151,14 @@ spec:
     requests:
       storage: 1Gi
 ```
-and then create the pvc:
+and then tell kubernetes to create the pvc:
 ```
 kubectl create -f pvc.yaml
 ```
 
 # Install Reana Cluster
 There is a python script provided by the Reana team that will deploy the system
-into the current cluster. This should be migrated to Helm.. might be a nice pull
+into the current cluster. Ideally some day this should be migrated to Helm.. might be a nice pull
 request to contribute...
 
 ```
@@ -207,7 +211,7 @@ curl -k https://reana.yourdns.name.org/reana/api/ping
 ```
 
 # Install Client and _Hello, Reana_
-On your local workstation, we are finally going to install the Reana client and
+On your local workstation we are finally going to install the Reana client and
 run a simple workflow on the cluster.
 
 You need to set environment variables to tell the client how to connect to
@@ -222,13 +226,13 @@ There is a [bug](https://github.com/reanahub/reana-cluster/issues/73)
 in the reana-cluster cli where it won't tell us the correct url for our cluster,
 but it can easily figure that out ourselves. Do make a note of the `REANA_ACCESS_TOKEN`
 
-1. Clone the [reana-demo-helloworld](https://github.com/reanahub/reana-demo-helloworld)
+1. On your local workstation clone the [reana-demo-helloworld](https://github.com/reanahub/reana-demo-helloworld)
 repository.
 2. Follow the instructions to install the reana client
 ```
 virtualenv ~/.virtualenvs/myreana
 source ~/.virtualenvs/myreana/bin/activate
-$ pip install reana-client
+pip install reana-client
 ```
 3. Set the evironment variables. The `REANA_ACCESS_TOKEN` can be set with the
 output from the `reana-cluster` command run previously. Set the `REANA_SERVER_URL`
@@ -260,6 +264,7 @@ reana-client status
 reana-client list
 reana-client download results/greetings.txt
 ```
+
 # Next Steps
 Congratulations! You have running Reana cluster with secure remote access.
 Review the documentation at [https://reana.readthedocs.io/en/latest/](https://reana.readthedocs.io/en/latest/)
