@@ -207,7 +207,7 @@ tls:
 domain.
 7. Test out connectivity with:
 ```
-curl -k https://reana.yourdns.name.org/reana/api/ping
+curl -k https://reana.yourdns.name.org/api/ping
 ```
 
 # Install Client and _Hello, Reana_
