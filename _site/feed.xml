@@ -3,10 +3,10 @@
   <channel>
     <title>Ben Galewsky</title>
     <description>&lt;h1&gt;Development Blog&lt;/h1&gt;&lt;h3&gt;Research Programmer NCSA&lt;/h3&gt;</description>
-    <link>http://localhost:4000/</link>
-    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 04 Dec 2019 15:34:48 -0600</pubDate>
-    <lastBuildDate>Wed, 04 Dec 2019 15:34:48 -0600</lastBuildDate>
+    <link>http://bengalewsky.github.io/</link>
+    <atom:link href="http://bengalewsky.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Wed, 04 Dec 2019 16:05:51 -0600</pubDate>
+    <lastBuildDate>Wed, 04 Dec 2019 16:05:51 -0600</lastBuildDate>
     <generator>Jekyll v3.7.4</generator>
     
       <item>
@@ -183,8 +183,8 @@ images would seem to make it unsuitable for preservation. Yadage is a better
 fit for those applications.&lt;/p&gt;
 </description>
         <pubDate>Sun, 24 Nov 2019 23:01:43 -0600</pubDate>
-        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</link>
-        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</guid>
+        <link>http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</link>
+        <guid isPermaLink="true">http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</guid>
         
         
         <category>parsl</category>
@@ -446,8 +446,8 @@ out of a persistent volume in the cluster.&lt;/p&gt;
 &lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
 </description>
         <pubDate>Mon, 25 Feb 2019 03:01:43 -0600</pubDate>
-        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</link>
-        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</guid>
+        <link>http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</link>
+        <guid isPermaLink="true">http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</guid>
         
         
         <category>parsl</category>
@@ -498,8 +498,8 @@ NAME   RUN_NUMBER   CREATED   STATUS
 &lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
 </description>
         <pubDate>Sun, 24 Feb 2019 23:01:43 -0600</pubDate>
-        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</link>
-        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</guid>
+        <link>http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</link>
+        <guid isPermaLink="true">http://bengalewsky.github.io/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</guid>
         
         
         <category>parsl</category>
@@ -779,8 +779,8 @@ Review the documentation at &lt;a href=&quot;https://reana.readthedocs.io/en/lat
 &lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
 </description>
         <pubDate>Wed, 23 Jan 2019 23:31:43 -0600</pubDate>
-        <link>http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</link>
-        <guid isPermaLink="true">http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</guid>
+        <link>http://bengalewsky.github.io/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</link>
+        <guid isPermaLink="true">http://bengalewsky.github.io/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</guid>
         
         
         <category>openstack</category>
@@ -869,8 +869,8 @@ docker-compose run tf
 
 </description>
         <pubDate>Mon, 10 Dec 2018 10:31:43 -0600</pubDate>
-        <link>http://localhost:4000/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html</link>
-        <guid isPermaLink="true">http://localhost:4000/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html</guid>
+        <link>http://bengalewsky.github.io/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html</link>
+        <guid isPermaLink="true">http://bengalewsky.github.io/openstack/docker/2018/12/10/BuildingTensorFlowForOpenstack1.html</guid>
         
         
         <category>openstack</category>
