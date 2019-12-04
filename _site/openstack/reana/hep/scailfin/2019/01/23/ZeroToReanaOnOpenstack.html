@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="Ben Galewsky" property="og:site_name">
+
+  <meta content="Zero to Reana on Openstack" property="og:title">
+
+
+  <meta content="article" property="og:type">
+
+
+  <meta content="<h1>Development Blog</h1><h3>Research Programmer NCSA</h3>" property="og:description">
+
+
+  <meta content="http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html" property="og:url">
+
+
+  <meta content="2019-01-23T23:31:43-06:00" property="article:published_time">
+  <meta content="http://localhost:4000/about/" property="article:author">
+
+
+  <meta property="og:image" content="">
+
+
+  
+  <meta content="openstack" property="article:section">
+  
+
+
+  
+
+  <title>Zero to Reana on Openstack</title>
+  <meta name="description" content="Reana is a reproducible research data platform based onKubernetes that is being developed at CERN. The team have developed a usefulPython script for installi...">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/css/main.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+  <link href='https://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Mono' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,200,300,500,600,700,900' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Gentium+Basic:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Alegreya:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500,700' rel='stylesheet' type='text/css'>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-hQpvDQiCJaD2H465dQfA717v7lu5qHWtDbWNPvaTJ0ID5xnPUlVXnKzq7b8YUkbN" crossorigin="anonymous">
+  <link rel="canonical" href="http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html">
+  <link rel="alternate" type="application/rss+xml" title="Ben Galewsky" href="http://localhost:4000/feed.xml">
+</head>
+
+
+  <body>
+
+<section>
+<nav class="navbar navbar-default navbar-fixed-top">
+
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Ben Galewsky</a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        
+        <li><a href="/about/">About</a></li>
+
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+
+
+      </ul>
+
+    <!--  <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Know More!</a></li>
+
+      </ul>-->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+</section>
+
+<section>
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="post-title-main" itemprop="name headline">Zero to Reana on Openstack</h1>
+      <p class="post-meta"><time datetime="2019-01-23T23:31:43-06:00" itemprop="datePublished">Jan 23, 2019</time> • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">BenGalewsky</span></span></p>
+      
+    </div>
+
+</div>
+
+
+  <div class="post-content container" itemprop="articleBody">
+    <p><a href="http://www.reana.io">Reana</a> is a reproducible research data platform based on
+Kubernetes that is being developed at CERN. The team have developed a useful
+Python script for installing and running the platform. It’s only tested with
+a local minikube installation and a cloud-based installation on CERN’s
+<em>lxplus-cloud</em> OpenStack.</p>
+
+<p>I was asked to set up an instance on NCSA’s OpenStack cluster called Nebula.
+This posting describes the step-by-step recipe I followed. It should work for
+any generic OpenStack, including <a href="https://portal.xsede.org/jetstream">Jetstream</a>
+at Indiana or TACC.</p>
+
+<h1 id="overview-of-the-process">Overview of the Process</h1>
+<p>For this recipe we will:</p>
+<ol>
+  <li>Provision the cluster in a private network using Terraform</li>
+  <li>Install Kubernetes using the same Terraform proces</li>
+  <li>Install a Traefik ingress and secure with LetsEncrypt</li>
+  <li>Create a persistent volume for the reana resources</li>
+  <li>Install reana</li>
+  <li>Run “Hello, World”!</li>
+</ol>
+
+<h1 id="provision-the-cluster">Provision the Cluster</h1>
+<p>In our office, we have created a robust process for provisioning a Kubernetes
+cluster on OpenStack. It uses Terraform along with the simple and reliable
+<a href="https://github.com/data-8/kubeadm-bootstrap">KubeADM Bootstrap</a> developed
+by the Data8 group at Berkeley.</p>
+
+<p>We further automated this process by incorporating it into a complete
+<a href="https://www.terraform.io">Terraform</a> spec for provisioning the hosts, network,
+and attached storage.</p>
+
+<ol>
+  <li>Install Terraform</li>
+  <li>Check out a copy of <a href="https://github.com/nds-org/kubeadm-terraform">https://github.com/nds-org/kubeadm-terraform</a></li>
+  <li>Download credentials from your OpenStack dashboard. This comes as shell script
+which sets all of the environment variables needed for Terraform to
+communicate with your OpenStack api. You need to <code class="highlighter-rouge">source</code> this script and enter
+your OpenStack password when requested.</li>
+  <li>Create a cluster configuration .tfvars file in a a new directory called
+<code class="highlighter-rouge">config</code> in your copy of the repo:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>env_name = "reana"
+pubkey = "~/.ssh/cloud.key.pub"
+privkey = "~/.ssh/cloud.key"
+master_flavor = "m1.large"
+image = "Ubuntu 16.04"
+worker_flavor = "m1.large"
+public_network = "ext-net"
+worker_count = "2"
+worker_ips_count = "1"
+docker_volume_size = "75"
+storage_node_count = "1"
+storage_node_volume_size = "50"
+dns_nameservers = ["141.142.2.2", "141.142.230.144"]
+external_network_id="xxxx-x-x-xxx-x-xxx"
+pool_name="ext-net"
+</code></pre></div>    </div>
+    <p>You will need to customize this to your needs. Take a look at the <a href="https://github.com/nds-org/kubeadm-terraform/blob/master/README.md">README</a> for
+specifics of these variables. Basically, you need one or more worker nodes, an
+external IP address, and a storage node to host persistent volumes.</p>
+  </li>
+  <li>Initialize Terraform plugins:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>terraform init
+</code></pre></div>    </div>
+  </li>
+  <li>Apply the terraform spec
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>terraform apply --var-file=configs/myConfig.tfvars
+</code></pre></div>    </div>
+  </li>
+  <li>You now have an empty kubernetes cluster! For security purposes the api
+is not accessible from the outside world. You need to ssh into the master
+node. It has <code class="highlighter-rouge">kubectl</code> installed so you can start interacting with
+your cluster from there.
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ssh -i ~/.ssh/cloud.key ubuntu@xxx.xx.xxx
+</code></pre></div>    </div>
+  </li>
+  <li>The kubeadm process installs a helm chart called <code class="highlighter-rouge">support</code> which includes an
+ingress controller which would conflict with the traefik controller Reana
+requires. We’ll just delete this chart.
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>helm delete support
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h1 id="install-traefik-ingress-controller">Install Traefik Ingress Controller</h1>
+<p>The ingress controller sits on the node that has an external IP address and
+routes inbound http requests to the reana service regardless of the node
+where it is running.</p>
+
+<p>With helm, installation is quite simple. However, I wound up forking the helm chart as
+I couldn’t see how the node selector settings worked as implemented to insure
+the controller runs on the node that has an external IP address.</p>
+
+<ol>
+  <li>We tell helm about my repo where the forked chart is served:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo helm repo add openstack-traefik https://bengalewsky.github.io/openstack-traefik
+</code></pre></div>    </div>
+  </li>
+  <li>Use the OpenStack dashboard to look up the Private Network IP and the
+public IP of the node that will serve as your gateway.</li>
+  <li>Update your DNS record to add a wildcard <code class="highlighter-rouge">A</code> record that points to the external
+IP address of this ingress node.</li>
+  <li>Deploy traefik as:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sudo helm install openstack-traefik/traefik --name traefik-ingress-controller \
+ --namespace kube-system --set serviceType=NodePort \
+  --set externalIP=192.168.0.3 --set rbac.enabled=true \
+  --set acme.logging=true \
+  --set ssl.enabled=true,ssl.enforced=true,acme.enabled=true
+  --set acme.email=me@illinois.edu \
+  --set acme.challengeType=http-01 \
+  --set acme.staging=false
+</code></pre></div>    </div>
+    <p>Let’s unpack this… Set the <code class="highlighter-rouge">externalIP</code> to be the <em>private IP</em> of your ingress
+node. (It’s called <code class="highlighter-rouge">externalIP</code> to distinguish it from the IP inside the
+Kubernetes overlay network). We are turning encryption with
+<a href="https://letsencrypt.org">LetsEncrypt</a>. Traefik will coordinate with that service
+to generate certificates for each ingress domain. During debugging, you might
+set <code class="highlighter-rouge">acme.staging</code> to true. Traefik will ask for staging certs which look
+self-signed, but don’t count against your rate-limited requests to LetsEncrypt.</p>
+  </li>
+  <li>I used <a href="https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/complete-example">this example</a>
+to validate the traefik installation with a trivial ingress and service.</li>
+</ol>
+
+<h1 id="create-a-persistent-volume-claim">Create a Persistent Volume Claim</h1>
+<p>Reana makes extensive use of a shared persistent volume to hold the service
+together. One of the CERN-isms embedded in the Reana cluster init process is
+around storage. You have the choice of deploying as a single node development
+cluster, or using a hard-coded persistent volume claim named <code class="highlighter-rouge">manila-cephfs-pvc</code>.</p>
+
+<p>Create a PVC config file, <code class="highlighter-rouge">pvc.yaml</code> as:</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">manila-cephfs-pvc</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="s">volume.beta.kubernetes.io/storage-class</span><span class="pi">:</span> <span class="s2">"</span><span class="s">nfs"</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteMany</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">1Gi</span>
+</code></pre></div></div>
+<p>and then tell kubernetes to create the pvc:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create -f pvc.yaml
+</code></pre></div></div>
+
+<h1 id="install-reana-cluster">Install Reana Cluster</h1>
+<p>There is a python script provided by the Reana team that will deploy the system
+into the current cluster. Ideally some day this should be migrated to Helm.. might be a nice pull
+request to contribute…</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>virtualenv reana
+source reana/bin/activate
+pip install reana-cluster
+</code></pre></div></div>
+
+<p>Get a copy of the reana cluster config from this deployment:
+<code class="highlighter-rouge">~/.virtualenvs/reana/local/lib/python2.7/site-packages/reana_cluster/configurations/reana-cluster.yaml</code></p>
+
+<p>Two important changes for this file:</p>
+<ol>
+  <li>Add a line at the <code class="highlighter-rouge">cluster:</code> level of the file:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana_url: "reana.yourdns.name.org"
+</code></pre></div>    </div>
+    <p>This will be the URL for your reana service.</p>
+  </li>
+  <li>In the <code class="highlighter-rouge">environment</code> property under <code class="highlighter-rouge">reana-job-controller</code> set:</li>
+</ol>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>- REANA_STORAGE_BACKEND: "CEPHFS"
+</code></pre></div></div>
+<p>This will tell the job controller to create job pods that mount our shared
+volume instead of relying on non-shared local storage.</p>
+
+<ol>
+  <li>Deploy reana as:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-cluster -f reana-cluster.yaml --prod init
+</code></pre></div>    </div>
+    <p>The <code class="highlighter-rouge">--prod</code> option says to provision the system with the shared persistent
+volumes instead of just local host mounts.</p>
+  </li>
+  <li>The deployment creates an ingress rule that assumes we are providing the certs
+ourselves. Edit the ingress:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl edit ingress frontend
+</code></pre></div>    </div>
+    <p>and remove these lines:</p>
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tls:
+  - secretName: reana-ssl-secrets
+</code></pre></div>    </div>
+  </li>
+  <li>Traefik will contact LetsEncrypt and obtain some nice valid certs for this
+domain.</li>
+  <li>Test out connectivity with:
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>curl -k https://reana.yourdns.name.org/api/ping
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h1 id="install-client-and-hello-reana">Install Client and <em>Hello, Reana</em></h1>
+<p>On your local workstation we are finally going to install the Reana client and
+run a simple workflow on the cluster.</p>
+
+<p>You need to set environment variables to tell the client how to connect to
+your cluster.</p>
+
+<p>On the kubernetes master node, issue this command</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-cluster env --include-admin-token
+</code></pre></div></div>
+
+<p>There is a <a href="https://github.com/reanahub/reana-cluster/issues/73">bug</a>
+in the reana-cluster cli where it won’t tell us the correct url for our cluster,
+but it can easily figure that out ourselves. Do make a note of the <code class="highlighter-rouge">REANA_ACCESS_TOKEN</code></p>
+
+<ol>
+  <li>On your local workstation clone the <a href="https://github.com/reanahub/reana-demo-helloworld">reana-demo-helloworld</a>
+repository.</li>
+  <li>Follow the instructions to install the reana client
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>virtualenv ~/.virtualenvs/myreana
+source ~/.virtualenvs/myreana/bin/activate
+pip install reana-client
+</code></pre></div>    </div>
+  </li>
+  <li>Set the evironment variables. The <code class="highlighter-rouge">REANA_ACCESS_TOKEN</code> can be set with the
+output from the <code class="highlighter-rouge">reana-cluster</code> command run previously. Set the <code class="highlighter-rouge">REANA_SERVER_URL</code>
+as
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export REANA_SERVER_URL=https://reana.yourdns.name.org
+</code></pre></div>    </div>
+  </li>
+  <li>From the root of the hello world repo create your analysis
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-client create -n my-analysis
+</code></pre></div>    </div>
+  </li>
+  <li>Set the <code class="highlighter-rouge">REANA_WORKON</code> environment var so you don’t have to specify
+it on every reana-client invocation.
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>export REANA_WORKON=my-analysis
+</code></pre></div>    </div>
+  </li>
+  <li>Upload the python code and the datafile to the cluster.
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-client upload ./data ./code
+reana-client list
+</code></pre></div>    </div>
+  </li>
+  <li>Run the workflow!
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-client start
+reana-client status
+</code></pre></div>    </div>
+  </li>
+  <li>Download the generated files to your workstation
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>reana-client list
+reana-client download results/greetings.txt
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<h1 id="next-steps">Next Steps</h1>
+<p>Congratulations! You have running Reana cluster with secure remote access.
+Review the documentation at <a href="https://reana.readthedocs.io/en/latest/">https://reana.readthedocs.io/en/latest/</a></p>
+
+<p>You can also join the <a href="ttps://gitter.im/reanahub/reana">gitter</a> to interact with the development commuity.</p>
+
+<p>This work has been supported by the NSF and Project <a href="https://scailfin.github.io">SCAILFIN</a></p>
+
+  </div>
+
+</article>
+
+</section>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+  <div class="container footer-content">
+    DevJournal Theme by Hemang Kumar<br>
+    Powered By Jekyll
+  </div>
+</nav>
+
+  </body>
+
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="Ben Galewsky" property="og:site_name">
+
+  <meta content="Porting Reana Atlas Recast Demo to Parsl" property="og:title">
+
+
+  <meta content="article" property="og:type">
+
+
+  <meta content="<h1>Development Blog</h1><h3>Research Programmer NCSA</h3>" property="og:description">
+
+
+  <meta content="http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html" property="og:url">
+
+
+  <meta content="2019-02-25T03:01:43-06:00" property="article:published_time">
+  <meta content="http://localhost:4000/about/" property="article:author">
+
+
+  <meta property="og:image" content="">
+
+
+  
+  <meta content="parsl" property="article:section">
+  
+
+
+  
+
+  <title>Porting Reana Atlas Recast Demo to Parsl</title>
+  <meta name="description" content="As part of my work on project SCAILFIN I amexploring how we could express Parslworkflows as Reana reproducible research objects. Parslis a parallel workflow ...">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/css/main.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+  <link href='https://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Mono' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Source+Code+Pro:400,200,300,500,600,700,900' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Gentium+Basic:400,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Alegreya:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,400italic,700' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Fira+Sans:400,300,500,700' rel='stylesheet' type='text/css'>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-hQpvDQiCJaD2H465dQfA717v7lu5qHWtDbWNPvaTJ0ID5xnPUlVXnKzq7b8YUkbN" crossorigin="anonymous">
+  <link rel="canonical" href="http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html">
+  <link rel="alternate" type="application/rss+xml" title="Ben Galewsky" href="http://localhost:4000/feed.xml">
+</head>
+
+
+  <body>
+
+<section>
+<nav class="navbar navbar-default navbar-fixed-top">
+
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">Ben Galewsky</a>
+    </div>
+
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        
+        <li><a href="/about/">About</a></li>
+
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+        
+
+        
+
+
+      </ul>
+
+    <!--  <ul class="nav navbar-nav navbar-right">
+        <li><a href="#">Know More!</a></li>
+
+      </ul>-->
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+</section>
+
+<section>
+<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="post-title-main" itemprop="name headline">Porting Reana Atlas Recast Demo to Parsl</h1>
+      <p class="post-meta"><time datetime="2019-02-25T03:01:43-06:00" itemprop="datePublished">Feb 25, 2019</time> • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">BenGalewsky</span></span></p>
+      
+    </div>
+
+</div>
+
+
+  <div class="post-content container" itemprop="articleBody">
+    <p>As part of my work on project <a href="https://scailfin.github.io">SCAILFIN</a> I am
+exploring how we could express <a href="https://parsl.readthedocs.io/en/latest/">Parsl</a>
+workflows as <a href="http://www.reana.io">Reana</a> reproducible research objects. Parsl
+is a parallel workflow system that is expressed as code. Dan Katz published
+an <a href="https://danielskatzblog.wordpress.com/2019/02/05/using-workflows-expressed-as-code-and-workflows-expressed-as-data-together/">informative article</a>
+describing the motivation behind this approach.</p>
+
+<p>To learn more about parsl and to see how it would fit into the reana world, we
+decided that I should port one of the reana demos from yadage to parsl. I did
+this with the
+<a href="https://github.com/BenGalewsky/reana-demo-atlas-recast">Atlas Recast Demo</a>.</p>
+
+<p>You can see the full example in the <code class="highlighter-rouge">parslization</code> branch of
+<a href="https://github.com/BenGalewsky/reana-demo-atlas-recast/tree/parslization">my fork of the demo</a></p>
+
+<h1 id="basic-approach">Basic Approach</h1>
+<p>The demo is implemented as two steps, each relying on a docker image based on
+the <a href="https://hub.docker.com/r/atlas/analysisbase">Atlas Standalone Analysis Image</a>.
+This image provides many of the basic tools needed for working with events in
+ATLAS Root files.</p>
+
+<p>The first step downloads a root file and extracts specific events into an output
+file. The second step uses the extracted events and produces some plots. These
+two steps are implemented in parsl as parameterized bash scripts running in the
+two docker containers.</p>
+
+<p>For our purposes we will be running these two containers on a kubernetes cluster
+with parsl controlling them.  The two steps interact through a shared persistent
+volume.</p>
+
+<p><img src="https://github.com/BenGalewsky/bengalewsky.github.io/raw/master/images/atlas-recast-in-parsl.png" alt="Parsl Workflow" /></p>
+
+<p>We tell parsl to orchestrate the two containers through the generated file. The
+first container starts, and the second container waits till the file is
+generated.</p>
+
+<h1 id="parsl-control-of-containers">Parsl Control of Containers</h1>
+<p>Parsl interacts with Docker containers through an <code class="highlighter-rouge">ipython</code> engine. For this to<br />
+work, the container must have python3 with the parsl package installed. This
+proved to be the most vexing part of the whole project. The Atlas <code class="highlighter-rouge">analysisbase</code>
+image is based on a Centos6 image which only has Python2.7 available.</p>
+
+<p>The only way I could figure out how to get this environment installed in the
+image without breaking dependencies that some of the earlier steps in the
+Docker build rely on was to add a final step to Docker file that actually
+updates the development tools and builds python3 from source.</p>
+
+<pre><code class="language-Dockerfile">RUN yum update -y &amp;&amp; \
+    yum groupinstall "Development Tools" -y &amp;&amp; \
+    wget https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tgz &amp;&amp; \
+    tar -xvf Python-3.6.8.tgz &amp;&amp; \
+    cd Python-3.6.8 &amp;&amp; \
+    ./configure &amp;&amp; \
+    make &amp;&amp; \
+    make altinstall &amp;&amp; \
+    /usr/local/bin/pip3.6 install cython &amp;&amp; \
+    /usr/local/bin/pip3.6 install parsl
+</code></pre>
+
+<p>In my fork of the Atlas demo I updated the two Dockerfiles. I built them and
+deployed them to <a href="https://cloud.docker.com/repository/list">my DockerHub</a> repo.</p>
+
+<h1 id="creating-persistent-volume">Creating Persistent Volume</h1>
+<p>The two steps interact with each other and publish their outputs using a
+persistent volume that is shared between them. For simplicity’s sake, I tested
+all of this out using <a href="https://kubernetes.io/docs/tasks/tools/install-minikube/">minikube</a>
+with a host-mounted volume.</p>
+
+<p>To start with, I created a directory inside minikuibe’s VM by</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>minikube ssh
+</code></pre></div></div>
+<p>and then</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>mkdir /mnt/data
+</code></pre></div></div>
+
+<p>Back on my own workstation I created the persistent volume as <code class="highlighter-rouge">pv.yaml</code>:</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolume</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">task-pv-volume</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">type</span><span class="pi">:</span> <span class="s">local</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">manual</span>
+  <span class="na">capacity</span><span class="pi">:</span>
+    <span class="na">storage</span><span class="pi">:</span> <span class="s">10Gi</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteMany</span>
+  <span class="na">hostPath</span><span class="pi">:</span>
+    <span class="na">path</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/mnt/data"</span>
+</code></pre></div></div>
+
+<p>and a presistent volume claim as <code class="highlighter-rouge">pvc.yaml</code>:</p>
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">kind</span><span class="pi">:</span> <span class="s">PersistentVolumeClaim</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">task-pv-claim</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">storageClassName</span><span class="pi">:</span> <span class="s">manual</span>
+  <span class="na">accessModes</span><span class="pi">:</span>
+    <span class="pi">-</span> <span class="s">ReadWriteMany</span>
+  <span class="na">resources</span><span class="pi">:</span>
+    <span class="na">requests</span><span class="pi">:</span>
+      <span class="na">storage</span><span class="pi">:</span> <span class="s">3Gi</span>
+</code></pre></div></div>
+
+<p>Then created them in cluster with:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create -f pv.yaml
+kubectl create -f pvc.yaml
+</code></pre></div></div>
+
+<p>We will need some files from the repo to be copied to this persistent volume.
+One of the features of reana is that it handles the copying of data into the
+cluster. Since I’m not using reana for this example, I launched a busybox pod
+in the cluster with the volume mounted with
+<code class="highlighter-rouge">debug-pod.yaml</code> as:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kind: Pod
+apiVersion: v1
+metadata:
+  name: volume-debugger
+spec:
+  volumes:
+    - name: volume-to-debug
+      persistentVolumeClaim:
+       claimName: task-pv-claim
+  containers:
+    - name: debugger
+      image: busybox
+      command: ['sleep', '3600']
+      volumeMounts:
+        - mountPath: "/data"
+          name: volume-to-debug
+</code></pre></div></div>
+
+<p>I then created the pod and opened a shell:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create <span class="nt">-f</span> debug-pod.yaml
+kubectl <span class="nb">exec</span> <span class="nt">-it</span> volume-debugger sh
+</code></pre></div></div>
+
+<p>Inside that volume-debugger I created a <code class="highlighter-rouge">/data/code</code> directory and then from
+my workstation I copied the python scripts from the atlas-recast repo into that
+directory:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>statanalysis
+kubectl cp make_ws.py volume-debugger:/data/code/make_ws.py
+kubectl cp plot.py volume-debugger:/data/code/plot.py
+kubectl cp set_limit.py volume-debugger:/data/code/set_limit.py
+kubectl cp data/background.root volume-debugger:/data/background.root
+kubectl cp data/data.root volume-debugger:/data/data.root
+</code></pre></div></div>
+
+<p>I confirmed that everything was where I expected with the volume-debugger shell.</p>
+
+<h1 id="configuring-parsl-executors-for-kubernetes">Configuring Parsl Executors for Kubernetes</h1>
+<p>Parsl runs the workflow steps using executors which are linked to specific
+providers which run the code. We will be using the <code class="highlighter-rouge">IPyParallelExecutor</code> and
+the <code class="highlighter-rouge">KubernetesProvider</code>. The provider’s configuration is where we specify the
+docker image to use. It also allows for persistent volumes to be mounted into
+the containers.</p>
+
+<p>Here is the config object that I use:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">(</span>
+    <span class="n">executors</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">IPyParallelExecutor</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="s">'event_selection'</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">KubernetesProvider</span><span class="p">(</span>
+                <span class="n">image</span><span class="o">=</span><span class="s">"bengal1/reana-demo-atlas-recast-eventselection:latest"</span><span class="p">,</span>
+                <span class="n">nodes_per_block</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">init_blocks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">max_blocks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">parallelism</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">persistent_volumes</span><span class="o">=</span><span class="p">[(</span><span class="s">"task-pv-claim"</span><span class="p">,</span><span class="s">"/data"</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">IPyParallelExecutor</span><span class="p">(</span>
+            <span class="n">label</span><span class="o">=</span><span class="s">'stat_analysis'</span><span class="p">,</span>
+            <span class="n">provider</span><span class="o">=</span><span class="n">KubernetesProvider</span><span class="p">(</span>
+                <span class="n">image</span><span class="o">=</span><span class="s">"bengal1/reana-demo-atlas-recast-statanalysis"</span><span class="p">,</span>
+                <span class="n">nodes_per_block</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">init_blocks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">max_blocks</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">parallelism</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">persistent_volumes</span><span class="o">=</span><span class="p">[(</span><span class="s">"task-pv-claim"</span><span class="p">,</span> <span class="s">"/data"</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">],</span>
+    <span class="n">lazy_errors</span><span class="o">=</span><span class="bp">False</span>
+<span class="p">)</span>
+</code></pre></div></div>
+<p>This defines an Executor for each step along with the Docker image which
+implements the behavior. Each executor is given a name which is referenced
+in the parsl steps.</p>
+
+<h1 id="the-workflow">The Workflow</h1>
+<p>Now we get into the parsl workflow as code! There are two steps in our workflow
+each are bash scripts that run on their Docker container. The key is the
+<code class="highlighter-rouge">@App</code> annotation:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@App('bash', executors=['stat_analysis'], cache=True)
+</code></pre></div></div>
+
+<p>Since the second step depends on a file produced by the first step, we set up
+a data dependency. This is done by creating a <code class="highlighter-rouge">parsl.File</code> handle to the
+generated hist-sample.root file. When the first step is invoked, a future of
+this file is made available. I made it an input data dependency to the second
+step.</p>
+
+<p>This step in turn produces a data future for a .png plot that it produces. I run
+the workflow, by invoking both steps and then waiting for the final result data
+future to to resolve.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">event_selection_future</span> <span class="o">=</span> <span class="n">event_selection</span><span class="p">(</span><span class="s">"404958"</span><span class="p">,</span> <span class="s">"recast_sample"</span><span class="p">,</span> <span class="mf">0.00122</span><span class="p">,</span>
+                                         <span class="n">dxaod_file</span><span class="o">=</span><span class="s">"https://recastwww.web.cern.ch/recastwww/data/reana-recast-demo/mc15_13TeV.123456.cap_recast_demo_signal_one.root"</span><span class="p">,</span>
+                                         <span class="n">submitDir</span><span class="o">=</span><span class="s">"/data/submitDir"</span><span class="p">,</span>
+                                         <span class="n">lumi_in_ifb</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+                                         <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">sample_file</span><span class="p">])</span>
+
+<span class="n">stat_analysis_future</span> <span class="o">=</span> <span class="n">stat_analyis</span><span class="p">(</span><span class="s">"/data/data.root"</span><span class="p">,</span> <span class="s">"/data/submitDir/hist-sample.root"</span><span class="p">,</span>
+                           <span class="s">"/data/background.root"</span><span class="p">,</span> <span class="s">"/data/results"</span><span class="p">,</span>
+                                    <span class="n">inputs</span><span class="o">=</span><span class="n">event_selection_future</span><span class="o">.</span><span class="n">outputs</span><span class="p">,</span>
+                                    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">post_file</span><span class="p">])</span>
+
+
+<span class="c"># Check if the result file is ready</span>
+<span class="k">print</span> <span class="p">(</span><span class="s">'Done: </span><span class="si">%</span><span class="s">s'</span> <span class="o">%</span> <span class="n">stat_analysis_future</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">done</span><span class="p">())</span>
+<span class="k">print</span><span class="p">(</span><span class="s">'result is '</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">stat_analysis_future</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">result</span><span class="p">()))</span>
+</code></pre></div></div>
+<h1 id="conclusions">Conclusions</h1>
+<p>This exercise was a great opportunity to learn more about parsl as well yadage
+and a chance to think a bit more about the features of reana. My first reaction
+is that I enjoyed parsl’s <em>workflow as code</em> model. I found it much easier to
+learn and read than yadage’s yaml model.</p>
+
+<p>One disadvantage I found was that due to parsl’s reliance on iPython for
+execution it winds up being more invasive to the deployed Docker containers.
+The requirement for the parsl package and Python3 in the image came close to
+being a show stopper for the legacy code I was orchestrating.</p>
+
+<p>The other thing I noted after running this demo under reana is just how
+convenient reana’s handling of file deployments is. They offer a command line
+tool where you can upload files into a volume the cluster which will be mounted
+into running containers. It completely handles the persistent volumes itself.
+Parsl has some great tools for copying files into some other environments. I
+smell a nice parsl pull request coming on to support transferring files in and
+out of a persistent volume in the cluster.</p>
+
+<p>This work has been supported by the NSF and Project <a href="https://scailfin.github.io">SCAILFIN</a></p>
+
+  </div>
+
+</article>
+
+</section>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+  <div class="container footer-content">
+    DevJournal Theme by Hemang Kumar<br>
+    Powered By Jekyll
+  </div>
+</nav>
+
+  </body>
+
+</html>

@@ -5,9 +5,793 @@
     <description>&lt;h1&gt;Development Blog&lt;/h1&gt;&lt;h3&gt;Research Programmer NCSA&lt;/h3&gt;</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 20 Dec 2018 09:57:57 -0600</pubDate>
-    <lastBuildDate>Thu, 20 Dec 2018 09:57:57 -0600</lastBuildDate>
+    <pubDate>Wed, 04 Dec 2019 15:34:48 -0600</pubDate>
+    <lastBuildDate>Wed, 04 Dec 2019 15:34:48 -0600</lastBuildDate>
     <generator>Jekyll v3.7.4</generator>
+    
+      <item>
+        <title>Comparing Yadage and Parsl Workflow Languages</title>
+        <description>&lt;p&gt;Yadage and Parsl are two popular workflow languages. As part of project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;,
+we are looking into scripting the REANA reproducible scientific
+workflow framework from CERN. It currently supports Yadage and Common
+Worklow Language to specify the workflow. We are keenly interested in a possible
+role for Parsl in this framework.&lt;/p&gt;
+
+&lt;h2 id=&quot;basics&quot;&gt;Basics&lt;/h2&gt;
+&lt;p&gt;Yadage and Parsl are both workflow languages and both generate &lt;em&gt;directed
+acyclic graphs&lt;/em&gt; (DAGs). Yadage represents workflows using YAML and dependencies
+are declared in terms of references to other tasks. Parsl uses python to
+describe the workflow. It takes more of dataflow view on dependencies. Tasks
+dependencies are represented as data result futures. The next task is started
+when the dependant data output futures complete.&lt;/p&gt;
+
+&lt;h2 id=&quot;tasks&quot;&gt;Tasks&lt;/h2&gt;
+&lt;h3 id=&quot;yadage&quot;&gt;Yadage&lt;/h3&gt;
+&lt;p&gt;The atomic unit of the workflow is a packtivity – a packaged activity. It
+represents a single parametrized processing step. The parameters a passed as
+YAML documents and the processing step is executed using one of multiple
+backends. After processing the packtivity publishes JSON data that includes
+relevant data for further processing (e.g. referencing files that were created
+during the processing). &lt;sup&gt;&lt;a href=&quot;https://yadage.readthedocs.io/en/latest/definingworkflows.html&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;parsl&quot;&gt;Parsl&lt;/h3&gt;
+&lt;p&gt;In Parsl an “app” is a piece of code that can be asynchronously executed on an
+execution resource. An execution resource in this context is any target system
+such as a laptop, cluster, cloud, or even supercomputer. Execution on these
+resources can be performed by a pool of threads, processes, or remote workers.&lt;/p&gt;
+
+&lt;p&gt;Parsl apps are defined by annotating Python functions with an app decorator.
+Currently two types of apps can be defined: Python, with the corresponding
+&lt;code class=&quot;highlighter-rouge&quot;&gt;@python_app&lt;/code&gt; decorator, and Bash, with the corresponding &lt;code class=&quot;highlighter-rouge&quot;&gt;@bash_app&lt;/code&gt; decorator.
+Python apps encapsulate pure Python code, while Bash apps wrap calls to external
+applications and scripts.&lt;sup&gt;&lt;a href=&quot;https://parsl.readthedocs.io/en/stable/&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+
+&lt;div class=&quot;html-table&quot;&gt;
+
+&lt;table&gt;
+&lt;tr&gt;
+&lt;th&gt;Feature&lt;/th&gt;
+&lt;th&gt;Yadage&lt;/th&gt;
+&lt;th&gt;Parsl&lt;/th&gt;
+&lt;/tr&gt;
+
+&lt;tr&gt;
+&lt;td&gt;Task description&lt;/td&gt;
+&lt;td&gt;Can be a string interpolated command line which are executed as a single bash command. It allows for string interpolation from a parameter set. Can also be a multi-line script which can be executed by bash, python, or Root C++ interpreter.
+&lt;/td&gt;
+&lt;td&gt;Can be a bash script or python function. Python functions are easy; just create a function and decorate @python_app. Bash scripts are also written as decorated python functions that return a string containing the steps to be executed.
+&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Parameters&lt;/td&gt; &lt;td&gt;A dictionary provided in the &lt;code class=&quot;highlighter-rouge&quot;&gt; parameters&lt;/code&gt; property of the task. Each of the keys are available for string interpolation in the task's script or command.&lt;/td&gt;&lt;td&gt; Arguments to the python function can be used directly in python tasks. Can be use in string interpolation for the returned string for the bash steps &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Environment &lt;/td&gt; &lt;td&gt;Encoded as part of the task definition. Mostly used to identify the docker image to run the step in as well as some CERN-specific extras to mount a filesystem and provide authentication. Yadage also supports a local process environment which runs on the host server.&lt;/td&gt; &lt;td&gt; Not part of the task description and must be associated with the task in the main driver script when setting up the workflow. &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt; Data Publication &lt;/td&gt; &lt;td&gt; Yadage requires a shared filesystem. Data is published by a step using the &lt;code class=&quot;highlighter-rouge&quot;&gt;publish&lt;/code&gt;. There is a &lt;code class=&quot;highlighter-rouge&quot;&gt;publisher-type&lt;/code&gt; property under this which is not well documented. Valid values seen are &lt;code class=&quot;highlighter-rouge&quot;&gt;frompar-pub&lt;/code&gt; which seems to allow for a value to be set as a parameter. &lt;code class=&quot;highlighter-rouge&quot;&gt;fromglob-pub&lt;/code&gt; which expands a directory list from wildcard specified in &lt;code class=&quot;highlighter-rouge&quot;&gt;globexpression&lt;/code&gt;. &lt;code class=&quot;highlighter-rouge&quot;&gt;constant-pub&lt;/code&gt; is another. &lt;/td&gt; &lt;td&gt; Parsl functions can have &lt;code class=&quot;highlighter-rouge&quot;&gt;inputs&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;outputs&lt;/code&gt; parameters. Each of these are lists of futures. It will wait for the input futures to resolve before starting the task. Likewise, data can be published to the output futures which will not resolve til the task is complete. Parsl has a data management layer that allows for data to be consumed and written to various local and remote filesystems.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;/div&gt;
+
+&lt;h2 id=&quot;workflows&quot;&gt;Workflows&lt;/h2&gt;
+&lt;h3 id=&quot;yadage-1&quot;&gt;Yadage&lt;/h3&gt;
+&lt;p&gt;Instead of describing a specific graph of tasks, a yadage workflow definition consists of a collection of stages that describe how an existing graph should be extended with additional nodes and edges. Starting from an empty graph (0 nodes, 0 edges), it is built up sequentially through application of these stages. This allows yadage to process workflows, whose graph structure is not known at definition time (such as workflow producing a variable number of data fragments).&lt;/p&gt;
+
+&lt;p&gt;A stage consists of two pieces&lt;/p&gt;
+
+&lt;p&gt;A stage body (i.e. its scheduler):
+This section describes the logic how to define new nodes (i.e. packtivities with a specific parameter input) and new edges to attach them to the existing graph. Currently yadage supports two stages, one defining a single node and defining multiple nodes, both of which add edges according to the the data accessed from upstream nodes.
+A predicate (i.e. its dependencies):
+The predicate (also referred to as the stage’s dependencies) is a description of when the stage body is ready to be applied. Currently yadage supports a single predicate that takes a number of JSON Path expressions. Each expression selects a number of stages. The dependency is considered satisfied when all packtivities associated to that stage (i.e. nodes) have a published result&lt;sup&gt;&lt;a href=&quot;https://yadage.readthedocs.io/en/latest/definingworkflows.html&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;parsl-1&quot;&gt;Parsl&lt;/h3&gt;
+&lt;p&gt;Workflows in Parsl are created implicitly based on the passing of control or data between apps. The flexibility of this model allows for the implementation of a wide range of workflow patterns from sequential through to complex nested, parallel workflows.&lt;/p&gt;
+
+&lt;p&gt;Parsl is also designed to address broad execution requirements from workflows that run a large number of very small tasks to those that run few long running tasks. In each case, Parsl can be configured to optimize deployment towards performance or fault tolerance.&lt;sup&gt;&lt;a href=&quot;https://parsl.readthedocs.io/en/stable/&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;workflow-patterns&quot;&gt;Workflow Patterns&lt;/h3&gt;
+&lt;div class=&quot;html-table&quot;&gt;
+
+&lt;table&gt;
+&lt;tr&gt;
+&lt;th&gt;Pattern&lt;/th&gt;&lt;th&gt;Description&lt;/th&gt;&lt;th&gt;Yadage&lt;/th&gt;&lt;th&gt;Parsl&lt;/th&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Procedural workflows &lt;/td&gt;&lt;td&gt; Simple sequential or procedural workflows &lt;/td&gt;&lt;td&gt; Yadage manages the transitions based on outputs from a task completing &lt;/td&gt;&lt;td&gt; Parsl can track app futures which link end of one task to start of another &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Parallel workflows &lt;/td&gt;&lt;td&gt; Parallel execution, respecting dependencies among app executions. &lt;/td&gt;&lt;td&gt; Automatically builds parallel DAGs from spec &lt;/td&gt;&lt;td&gt; Automatically generated from App dependencies &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt; Parallel workflows with loops &lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt; Can be implemented with tasks that produce a variable number of data fragments &lt;/td&gt;&lt;td&gt; Just a simple python loop that appends calls to the parsl task &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt; Parallel dataflows &lt;/td&gt;&lt;td&gt; Parallel workflows driven by data results, and not task completion &lt;/td&gt;&lt;td&gt; Yadage won't start a new task until all of the outputs from a previous step are complete | Parsl tracks dependencies either by task, or by data future. &lt;/td&gt;&lt;td&gt;Each Parsl data output is represented as a Future. Tasks can be triggered by one or more of these futures completing&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;execution-backends&quot;&gt;Execution Backends&lt;/h2&gt;
+&lt;p&gt;A workflow description language is only as useful as the execution backends.
+Both packages offer extensive options for this.&lt;/p&gt;
+
+&lt;h3 id=&quot;yadage-2&quot;&gt;Yadage&lt;/h3&gt;
+&lt;p&gt;Yadage comes with a command line tool for running workflows. It accepts a
+workflow definition and optional parameters. By default it will just run the
+workflow as a multiprocessing pool on the local machine.&lt;/p&gt;
+
+&lt;p&gt;Yadage can run on various backends such as multiprocessing pools, ipython
+clusters, or celery clusters. If human intervention is needed for certain steps,
+it can also be run interactively. Significantly, Yadage is supported by CERN’s
+reproducible science Framework,  Reana and it is used to execute yadage
+workflows inside Kubernetes in a  standardized environment.&lt;/p&gt;
+
+&lt;h3 id=&quot;parsl-2&quot;&gt;Parsl&lt;/h3&gt;
+&lt;p&gt;Parsl scripts can be executed on different execution providers (e.g., PCs,
+clusters, supercomputers) and using different execution models (e.g., threads,
+pilot jobs, etc.). Parsl separates the code from the configuration that
+specifies which execution provider(s) and executor(s) to use. Parsl provides a
+high level abstraction, called a block, for providing a uniform description of a
+resource configuration irrespective of the specific execution provider.&lt;/p&gt;
+
+&lt;p&gt;The parsl ecosystem includes specific interfaces for running on many of the
+popular HTC environments such as Jetstream, Condor, and Slurm. It also has
+interfaces for commercial cloud providers.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;HighThroughputExecutor&lt;/code&gt; implements hierarchical scheduling and batching and
+consistently delivers high throughput task execution on the order of 1000 Nodes&lt;/p&gt;
+
+&lt;p&gt;Key to this performance is the coupling between the parsl driver program and the
+executors. It depends on the IPython library in the executor image. The
+workflow steps are pickled using &lt;code class=&quot;highlighter-rouge&quot;&gt;CloudPickle&lt;/code&gt; and transmitted.&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h2&gt;
+&lt;p&gt;Both frameworks offer flexible and easy to read workflow definitions which are
+automatically translated into parallel processing graphs. Both support a number
+of execution backends to enable execution of the workflows on a variety of
+hosts and clusters available to our community.&lt;/p&gt;
+
+&lt;p&gt;The obvious difference between the two is the choice of language used to
+represent the workflow. Yadage starts with the popular YAML file format. This
+follows a traditional approach that represents workflow using a configuration
+file. Parsl’s unique approach is to use python as the specification language.&lt;/p&gt;
+
+&lt;p&gt;Parsl’s unfamiliar “workflow as code” model takes a little getting used to for
+new developers, however once the basic concepts are grasped it’s very easy
+to work with and can express very complicated parallel workflows with ease.
+Yadage’s YAML files are easy to get started with, but it seems that it would
+be difficult to specify anything more complicated than a few parallel threads.&lt;/p&gt;
+
+&lt;p&gt;The Parsl HighThroughputExecutor has received notoriety as a high performance
+workflow execution back-end and can scale to thousands of nodes. Delivering
+this performance requires that Parsl takes control over the execution of the
+code and depends on the presence of the parsl library, iPython and Python3
+inside any execution environments where it will be run. The versions of these
+dependencies must match the version of the driver program.&lt;/p&gt;
+
+&lt;p&gt;Yadage execution back-ends take a less invasive approach. They will launch
+docker containers and set the command to run as well as any environment
+variables. This makes it ideal of reproducible workflows in Reana since there
+are very few constraints on what can go into the docker image.&lt;/p&gt;
+
+&lt;p&gt;Given the expressiveness of Parsl for complicated parallel workflows and the
+highly performant set of executors, Parsl should be considered for demanding
+production workflows. However the need to introduce dependencies into the built
+images would seem to make it unsuitable for preservation. Yadage is a better
+fit for those applications.&lt;/p&gt;
+</description>
+        <pubDate>Sun, 24 Nov 2019 23:01:43 -0600</pubDate>
+        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</link>
+        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/11/24/CompareYadageAndParsl.html</guid>
+        
+        
+        <category>parsl</category>
+        
+        <category>reana</category>
+        
+        <category>HEP</category>
+        
+        <category>SCAILFIN</category>
+        
+      </item>
+    
+      <item>
+        <title>Porting Reana Atlas Recast Demo to Parsl</title>
+        <description>&lt;p&gt;As part of my work on project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt; I am
+exploring how we could express &lt;a href=&quot;https://parsl.readthedocs.io/en/latest/&quot;&gt;Parsl&lt;/a&gt;
+workflows as &lt;a href=&quot;http://www.reana.io&quot;&gt;Reana&lt;/a&gt; reproducible research objects. Parsl
+is a parallel workflow system that is expressed as code. Dan Katz published
+an &lt;a href=&quot;https://danielskatzblog.wordpress.com/2019/02/05/using-workflows-expressed-as-code-and-workflows-expressed-as-data-together/&quot;&gt;informative article&lt;/a&gt;
+describing the motivation behind this approach.&lt;/p&gt;
+
+&lt;p&gt;To learn more about parsl and to see how it would fit into the reana world, we
+decided that I should port one of the reana demos from yadage to parsl. I did
+this with the
+&lt;a href=&quot;https://github.com/BenGalewsky/reana-demo-atlas-recast&quot;&gt;Atlas Recast Demo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can see the full example in the &lt;code class=&quot;highlighter-rouge&quot;&gt;parslization&lt;/code&gt; branch of
+&lt;a href=&quot;https://github.com/BenGalewsky/reana-demo-atlas-recast/tree/parslization&quot;&gt;my fork of the demo&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;basic-approach&quot;&gt;Basic Approach&lt;/h1&gt;
+&lt;p&gt;The demo is implemented as two steps, each relying on a docker image based on
+the &lt;a href=&quot;https://hub.docker.com/r/atlas/analysisbase&quot;&gt;Atlas Standalone Analysis Image&lt;/a&gt;.
+This image provides many of the basic tools needed for working with events in
+ATLAS Root files.&lt;/p&gt;
+
+&lt;p&gt;The first step downloads a root file and extracts specific events into an output
+file. The second step uses the extracted events and produces some plots. These
+two steps are implemented in parsl as parameterized bash scripts running in the
+two docker containers.&lt;/p&gt;
+
+&lt;p&gt;For our purposes we will be running these two containers on a kubernetes cluster
+with parsl controlling them.  The two steps interact through a shared persistent
+volume.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;https://github.com/BenGalewsky/bengalewsky.github.io/raw/master/images/atlas-recast-in-parsl.png&quot; alt=&quot;Parsl Workflow&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We tell parsl to orchestrate the two containers through the generated file. The
+first container starts, and the second container waits till the file is
+generated.&lt;/p&gt;
+
+&lt;h1 id=&quot;parsl-control-of-containers&quot;&gt;Parsl Control of Containers&lt;/h1&gt;
+&lt;p&gt;Parsl interacts with Docker containers through an &lt;code class=&quot;highlighter-rouge&quot;&gt;ipython&lt;/code&gt; engine. For this to&lt;br /&gt;
+work, the container must have python3 with the parsl package installed. This
+proved to be the most vexing part of the whole project. The Atlas &lt;code class=&quot;highlighter-rouge&quot;&gt;analysisbase&lt;/code&gt;
+image is based on a Centos6 image which only has Python2.7 available.&lt;/p&gt;
+
+&lt;p&gt;The only way I could figure out how to get this environment installed in the
+image without breaking dependencies that some of the earlier steps in the
+Docker build rely on was to add a final step to Docker file that actually
+updates the development tools and builds python3 from source.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&quot;language-Dockerfile&quot;&gt;RUN yum update -y &amp;amp;&amp;amp; \
+    yum groupinstall &quot;Development Tools&quot; -y &amp;amp;&amp;amp; \
+    wget https://www.python.org/ftp/python/3.6.8/Python-3.6.8.tgz &amp;amp;&amp;amp; \
+    tar -xvf Python-3.6.8.tgz &amp;amp;&amp;amp; \
+    cd Python-3.6.8 &amp;amp;&amp;amp; \
+    ./configure &amp;amp;&amp;amp; \
+    make &amp;amp;&amp;amp; \
+    make altinstall &amp;amp;&amp;amp; \
+    /usr/local/bin/pip3.6 install cython &amp;amp;&amp;amp; \
+    /usr/local/bin/pip3.6 install parsl
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In my fork of the Atlas demo I updated the two Dockerfiles. I built them and
+deployed them to &lt;a href=&quot;https://cloud.docker.com/repository/list&quot;&gt;my DockerHub&lt;/a&gt; repo.&lt;/p&gt;
+
+&lt;h1 id=&quot;creating-persistent-volume&quot;&gt;Creating Persistent Volume&lt;/h1&gt;
+&lt;p&gt;The two steps interact with each other and publish their outputs using a
+persistent volume that is shared between them. For simplicity’s sake, I tested
+all of this out using &lt;a href=&quot;https://kubernetes.io/docs/tasks/tools/install-minikube/&quot;&gt;minikube&lt;/a&gt;
+with a host-mounted volume.&lt;/p&gt;
+
+&lt;p&gt;To start with, I created a directory inside minikuibe’s VM by&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;minikube ssh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;and then&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;mkdir /mnt/data
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Back on my own workstation I created the persistent volume as &lt;code class=&quot;highlighter-rouge&quot;&gt;pv.yaml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;PersistentVolume&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;task-pv-volume&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;local&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;storageClassName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;manual&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;capacity&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;storage&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;10Gi&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;accessModes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ReadWriteMany&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;hostPath&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;/mnt/data&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and a presistent volume claim as &lt;code class=&quot;highlighter-rouge&quot;&gt;pvc.yaml&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;PersistentVolumeClaim&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;task-pv-claim&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;storageClassName&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;manual&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;accessModes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ReadWriteMany&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;storage&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;3Gi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Then created them in cluster with:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f pv.yaml
+kubectl create -f pvc.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We will need some files from the repo to be copied to this persistent volume.
+One of the features of reana is that it handles the copying of data into the
+cluster. Since I’m not using reana for this example, I launched a busybox pod
+in the cluster with the volume mounted with
+&lt;code class=&quot;highlighter-rouge&quot;&gt;debug-pod.yaml&lt;/code&gt; as:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kind: Pod
+apiVersion: v1
+metadata:
+  name: volume-debugger
+spec:
+  volumes:
+    - name: volume-to-debug
+      persistentVolumeClaim:
+       claimName: task-pv-claim
+  containers:
+    - name: debugger
+      image: busybox
+      command: ['sleep', '3600']
+      volumeMounts:
+        - mountPath: &quot;/data&quot;
+          name: volume-to-debug
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;I then created the pod and opened a shell:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create &lt;span class=&quot;nt&quot;&gt;-f&lt;/span&gt; debug-pod.yaml
+kubectl &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; volume-debugger sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Inside that volume-debugger I created a &lt;code class=&quot;highlighter-rouge&quot;&gt;/data/code&lt;/code&gt; directory and then from
+my workstation I copied the python scripts from the atlas-recast repo into that
+directory:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;statanalysis
+kubectl cp make_ws.py volume-debugger:/data/code/make_ws.py
+kubectl cp plot.py volume-debugger:/data/code/plot.py
+kubectl cp set_limit.py volume-debugger:/data/code/set_limit.py
+kubectl cp data/background.root volume-debugger:/data/background.root
+kubectl cp data/data.root volume-debugger:/data/data.root
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;I confirmed that everything was where I expected with the volume-debugger shell.&lt;/p&gt;
+
+&lt;h1 id=&quot;configuring-parsl-executors-for-kubernetes&quot;&gt;Configuring Parsl Executors for Kubernetes&lt;/h1&gt;
+&lt;p&gt;Parsl runs the workflow steps using executors which are linked to specific
+providers which run the code. We will be using the &lt;code class=&quot;highlighter-rouge&quot;&gt;IPyParallelExecutor&lt;/code&gt; and
+the &lt;code class=&quot;highlighter-rouge&quot;&gt;KubernetesProvider&lt;/code&gt;. The provider’s configuration is where we specify the
+docker image to use. It also allows for persistent volumes to be mounted into
+the containers.&lt;/p&gt;
+
+&lt;p&gt;Here is the config object that I use:&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;config&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;executors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;IPyParallelExecutor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'event_selection'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;provider&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KubernetesProvider&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;bengal1/reana-demo-atlas-recast-eventselection:latest&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;nodes_per_block&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;init_blocks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;max_blocks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;parallelism&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;persistent_volumes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;task-pv-claim&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/data&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;IPyParallelExecutor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'stat_analysis'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;provider&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;KubernetesProvider&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;bengal1/reana-demo-atlas-recast-statanalysis&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;nodes_per_block&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;init_blocks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;max_blocks&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;parallelism&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;persistent_volumes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;task-pv-claim&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/data&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;lazy_errors&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;False&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This defines an Executor for each step along with the Docker image which
+implements the behavior. Each executor is given a name which is referenced
+in the parsl steps.&lt;/p&gt;
+
+&lt;h1 id=&quot;the-workflow&quot;&gt;The Workflow&lt;/h1&gt;
+&lt;p&gt;Now we get into the parsl workflow as code! There are two steps in our workflow
+each are bash scripts that run on their Docker container. The key is the
+&lt;code class=&quot;highlighter-rouge&quot;&gt;@App&lt;/code&gt; annotation:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;@App('bash', executors=['stat_analysis'], cache=True)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Since the second step depends on a file produced by the first step, we set up
+a data dependency. This is done by creating a &lt;code class=&quot;highlighter-rouge&quot;&gt;parsl.File&lt;/code&gt; handle to the
+generated hist-sample.root file. When the first step is invoked, a future of
+this file is made available. I made it an input data dependency to the second
+step.&lt;/p&gt;
+
+&lt;p&gt;This step in turn produces a data future for a .png plot that it produces. I run
+the workflow, by invoking both steps and then waiting for the final result data
+future to to resolve.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;event_selection_future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;event_selection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;404958&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;recast_sample&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.00122&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                         &lt;span class=&quot;n&quot;&gt;dxaod_file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;https://recastwww.web.cern.ch/recastwww/data/reana-recast-demo/mc15_13TeV.123456.cap_recast_demo_signal_one.root&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                         &lt;span class=&quot;n&quot;&gt;submitDir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/data/submitDir&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                         &lt;span class=&quot;n&quot;&gt;lumi_in_ifb&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;30.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                         &lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sample_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;stat_analysis_future&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stat_analyis&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/data/data.root&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/data/submitDir/hist-sample.root&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                           &lt;span class=&quot;s&quot;&gt;&quot;/data/background.root&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;/data/results&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                    &lt;span class=&quot;n&quot;&gt;inputs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;event_selection_future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+                                    &lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post_file&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+
+&lt;span class=&quot;c&quot;&gt;# Check if the result file is ready&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'Done: &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;s'&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stat_analysis_future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;done&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;'result is '&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stat_analysis_future&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;h1 id=&quot;conclusions&quot;&gt;Conclusions&lt;/h1&gt;
+&lt;p&gt;This exercise was a great opportunity to learn more about parsl as well yadage
+and a chance to think a bit more about the features of reana. My first reaction
+is that I enjoyed parsl’s &lt;em&gt;workflow as code&lt;/em&gt; model. I found it much easier to
+learn and read than yadage’s yaml model.&lt;/p&gt;
+
+&lt;p&gt;One disadvantage I found was that due to parsl’s reliance on iPython for
+execution it winds up being more invasive to the deployed Docker containers.
+The requirement for the parsl package and Python3 in the image came close to
+being a show stopper for the legacy code I was orchestrating.&lt;/p&gt;
+
+&lt;p&gt;The other thing I noted after running this demo under reana is just how
+convenient reana’s handling of file deployments is. They offer a command line
+tool where you can upload files into a volume the cluster which will be mounted
+into running containers. It completely handles the persistent volumes itself.
+Parsl has some great tools for copying files into some other environments. I
+smell a nice parsl pull request coming on to support transferring files in and
+out of a persistent volume in the cluster.&lt;/p&gt;
+
+&lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Mon, 25 Feb 2019 03:01:43 -0600</pubDate>
+        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</link>
+        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/02/25/PortingAtlasDemoToParsl.html</guid>
+        
+        
+        <category>parsl</category>
+        
+        <category>reana</category>
+        
+        <category>HEP</category>
+        
+        <category>SCAILFIN</category>
+        
+      </item>
+    
+      <item>
+        <title>Deleting Reana Workflows</title>
+        <description>&lt;p&gt;Until Reana 0.5.0 comes out, there is no way to clear out workflows. This
+becomes a bit of a mess during testing. Here is how to clear them out
+manually in the mean time:&lt;/p&gt;
+
+&lt;p&gt;From a node that has &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; access to the cluster, find the pod running
+postgres and open up a shell:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get pod | &lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; ^db
+kubectl &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt;pod name&amp;gt;&amp;gt; bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Inside the pod start up the postgres SQL command line:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;psql &lt;span class=&quot;nt&quot;&gt;--username&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$POSTGRES_USER&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--dbname&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$POSTGRES_DB&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Finally truncate the workflow table:&lt;/p&gt;
+&lt;div class=&quot;language-sql highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;truncate&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;table&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;workflow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now we need to delete the files associated with these workflows. Exit the
+database pod and now find the reana server pod and start a shell there:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl get pod | &lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; ^serv
+kubectl &lt;span class=&quot;nb&quot;&gt;exec&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-it&lt;/span&gt; &amp;lt;server pod&amp;gt; bash
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Go to the &lt;code class=&quot;highlighter-rouge&quot;&gt;/reana/users&lt;/code&gt; directory, and under each user, clearn out the contents
+of the &lt;code class=&quot;highlighter-rouge&quot;&gt;workflows&lt;/code&gt; directory&lt;/p&gt;
+
+&lt;p&gt;Exit the shell and verify that the workflows are gone with your reana-client:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-client workflows
+NAME   RUN_NUMBER   CREATED   STATUS
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Go forth and create new workflows!&lt;/p&gt;
+
+&lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 24 Feb 2019 23:01:43 -0600</pubDate>
+        <link>http://localhost:4000/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</link>
+        <guid isPermaLink="true">http://localhost:4000/parsl/reana/hep/scailfin/2019/02/24/DeletingReanaWorkflows.html</guid>
+        
+        
+        <category>parsl</category>
+        
+        <category>reana</category>
+        
+        <category>HEP</category>
+        
+        <category>SCAILFIN</category>
+        
+      </item>
+    
+      <item>
+        <title>Zero to Reana on Openstack</title>
+        <description>&lt;p&gt;&lt;a href=&quot;http://www.reana.io&quot;&gt;Reana&lt;/a&gt; is a reproducible research data platform based on
+Kubernetes that is being developed at CERN. The team have developed a useful
+Python script for installing and running the platform. It’s only tested with
+a local minikube installation and a cloud-based installation on CERN’s
+&lt;em&gt;lxplus-cloud&lt;/em&gt; OpenStack.&lt;/p&gt;
+
+&lt;p&gt;I was asked to set up an instance on NCSA’s OpenStack cluster called Nebula.
+This posting describes the step-by-step recipe I followed. It should work for
+any generic OpenStack, including &lt;a href=&quot;https://portal.xsede.org/jetstream&quot;&gt;Jetstream&lt;/a&gt;
+at Indiana or TACC.&lt;/p&gt;
+
+&lt;h1 id=&quot;overview-of-the-process&quot;&gt;Overview of the Process&lt;/h1&gt;
+&lt;p&gt;For this recipe we will:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Provision the cluster in a private network using Terraform&lt;/li&gt;
+  &lt;li&gt;Install Kubernetes using the same Terraform proces&lt;/li&gt;
+  &lt;li&gt;Install a Traefik ingress and secure with LetsEncrypt&lt;/li&gt;
+  &lt;li&gt;Create a persistent volume for the reana resources&lt;/li&gt;
+  &lt;li&gt;Install reana&lt;/li&gt;
+  &lt;li&gt;Run “Hello, World”!&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;provision-the-cluster&quot;&gt;Provision the Cluster&lt;/h1&gt;
+&lt;p&gt;In our office, we have created a robust process for provisioning a Kubernetes
+cluster on OpenStack. It uses Terraform along with the simple and reliable
+&lt;a href=&quot;https://github.com/data-8/kubeadm-bootstrap&quot;&gt;KubeADM Bootstrap&lt;/a&gt; developed
+by the Data8 group at Berkeley.&lt;/p&gt;
+
+&lt;p&gt;We further automated this process by incorporating it into a complete
+&lt;a href=&quot;https://www.terraform.io&quot;&gt;Terraform&lt;/a&gt; spec for provisioning the hosts, network,
+and attached storage.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Install Terraform&lt;/li&gt;
+  &lt;li&gt;Check out a copy of &lt;a href=&quot;https://github.com/nds-org/kubeadm-terraform&quot;&gt;https://github.com/nds-org/kubeadm-terraform&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Download credentials from your OpenStack dashboard. This comes as shell script
+which sets all of the environment variables needed for Terraform to
+communicate with your OpenStack api. You need to &lt;code class=&quot;highlighter-rouge&quot;&gt;source&lt;/code&gt; this script and enter
+your OpenStack password when requested.&lt;/li&gt;
+  &lt;li&gt;Create a cluster configuration .tfvars file in a a new directory called
+&lt;code class=&quot;highlighter-rouge&quot;&gt;config&lt;/code&gt; in your copy of the repo:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;env_name = &quot;reana&quot;
+pubkey = &quot;~/.ssh/cloud.key.pub&quot;
+privkey = &quot;~/.ssh/cloud.key&quot;
+master_flavor = &quot;m1.large&quot;
+image = &quot;Ubuntu 16.04&quot;
+worker_flavor = &quot;m1.large&quot;
+public_network = &quot;ext-net&quot;
+worker_count = &quot;2&quot;
+worker_ips_count = &quot;1&quot;
+docker_volume_size = &quot;75&quot;
+storage_node_count = &quot;1&quot;
+storage_node_volume_size = &quot;50&quot;
+dns_nameservers = [&quot;141.142.2.2&quot;, &quot;141.142.230.144&quot;]
+external_network_id=&quot;xxxx-x-x-xxx-x-xxx&quot;
+pool_name=&quot;ext-net&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;You will need to customize this to your needs. Take a look at the &lt;a href=&quot;https://github.com/nds-org/kubeadm-terraform/blob/master/README.md&quot;&gt;README&lt;/a&gt; for
+specifics of these variables. Basically, you need one or more worker nodes, an
+external IP address, and a storage node to host persistent volumes.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Initialize Terraform plugins:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Apply the terraform spec
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;terraform apply --var-file=configs/myConfig.tfvars
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;You now have an empty kubernetes cluster! For security purposes the api
+is not accessible from the outside world. You need to ssh into the master
+node. It has &lt;code class=&quot;highlighter-rouge&quot;&gt;kubectl&lt;/code&gt; installed so you can start interacting with
+your cluster from there.
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ssh -i ~/.ssh/cloud.key ubuntu@xxx.xx.xxx
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;The kubeadm process installs a helm chart called &lt;code class=&quot;highlighter-rouge&quot;&gt;support&lt;/code&gt; which includes an
+ingress controller which would conflict with the traefik controller Reana
+requires. We’ll just delete this chart.
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;helm delete support
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;install-traefik-ingress-controller&quot;&gt;Install Traefik Ingress Controller&lt;/h1&gt;
+&lt;p&gt;The ingress controller sits on the node that has an external IP address and
+routes inbound http requests to the reana service regardless of the node
+where it is running.&lt;/p&gt;
+
+&lt;p&gt;With helm, installation is quite simple. However, I wound up forking the helm chart as
+I couldn’t see how the node selector settings worked as implemented to insure
+the controller runs on the node that has an external IP address.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;We tell helm about my repo where the forked chart is served:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo helm repo add openstack-traefik https://bengalewsky.github.io/openstack-traefik
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Use the OpenStack dashboard to look up the Private Network IP and the
+public IP of the node that will serve as your gateway.&lt;/li&gt;
+  &lt;li&gt;Update your DNS record to add a wildcard &lt;code class=&quot;highlighter-rouge&quot;&gt;A&lt;/code&gt; record that points to the external
+IP address of this ingress node.&lt;/li&gt;
+  &lt;li&gt;Deploy traefik as:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;sudo helm install openstack-traefik/traefik --name traefik-ingress-controller \
+ --namespace kube-system --set serviceType=NodePort \
+  --set externalIP=192.168.0.3 --set rbac.enabled=true \
+  --set acme.logging=true \
+  --set ssl.enabled=true,ssl.enforced=true,acme.enabled=true
+  --set acme.email=me@illinois.edu \
+  --set acme.challengeType=http-01 \
+  --set acme.staging=false
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;Let’s unpack this… Set the &lt;code class=&quot;highlighter-rouge&quot;&gt;externalIP&lt;/code&gt; to be the &lt;em&gt;private IP&lt;/em&gt; of your ingress
+node. (It’s called &lt;code class=&quot;highlighter-rouge&quot;&gt;externalIP&lt;/code&gt; to distinguish it from the IP inside the
+Kubernetes overlay network). We are turning encryption with
+&lt;a href=&quot;https://letsencrypt.org&quot;&gt;LetsEncrypt&lt;/a&gt;. Traefik will coordinate with that service
+to generate certificates for each ingress domain. During debugging, you might
+set &lt;code class=&quot;highlighter-rouge&quot;&gt;acme.staging&lt;/code&gt; to true. Traefik will ask for staging certs which look
+self-signed, but don’t count against your rate-limited requests to LetsEncrypt.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;I used &lt;a href=&quot;https://github.com/nginxinc/kubernetes-ingress/tree/master/examples/complete-example&quot;&gt;this example&lt;/a&gt;
+to validate the traefik installation with a trivial ingress and service.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;create-a-persistent-volume-claim&quot;&gt;Create a Persistent Volume Claim&lt;/h1&gt;
+&lt;p&gt;Reana makes extensive use of a shared persistent volume to hold the service
+together. One of the CERN-isms embedded in the Reana cluster init process is
+around storage. You have the choice of deploying as a single node development
+cluster, or using a hard-coded persistent volume claim named &lt;code class=&quot;highlighter-rouge&quot;&gt;manila-cephfs-pvc&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Create a PVC config file, &lt;code class=&quot;highlighter-rouge&quot;&gt;pvc.yaml&lt;/code&gt; as:&lt;/p&gt;
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;PersistentVolumeClaim&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;v1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;manila-cephfs-pvc&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;s&quot;&gt;volume.beta.kubernetes.io/storage-class&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;nfs&quot;&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;accessModes&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ReadWriteMany&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;resources&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;requests&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;storage&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1Gi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;and then tell kubernetes to create the pvc:&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl create -f pvc.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;install-reana-cluster&quot;&gt;Install Reana Cluster&lt;/h1&gt;
+&lt;p&gt;There is a python script provided by the Reana team that will deploy the system
+into the current cluster. Ideally some day this should be migrated to Helm.. might be a nice pull
+request to contribute…&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;virtualenv reana
+source reana/bin/activate
+pip install reana-cluster
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Get a copy of the reana cluster config from this deployment:
+&lt;code class=&quot;highlighter-rouge&quot;&gt;~/.virtualenvs/reana/local/lib/python2.7/site-packages/reana_cluster/configurations/reana-cluster.yaml&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Two important changes for this file:&lt;/p&gt;
+&lt;ol&gt;
+  &lt;li&gt;Add a line at the &lt;code class=&quot;highlighter-rouge&quot;&gt;cluster:&lt;/code&gt; level of the file:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana_url: &quot;reana.yourdns.name.org&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;This will be the URL for your reana service.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;In the &lt;code class=&quot;highlighter-rouge&quot;&gt;environment&lt;/code&gt; property under &lt;code class=&quot;highlighter-rouge&quot;&gt;reana-job-controller&lt;/code&gt; set:&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;- REANA_STORAGE_BACKEND: &quot;CEPHFS&quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This will tell the job controller to create job pods that mount our shared
+volume instead of relying on non-shared local storage.&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Deploy reana as:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-cluster -f reana-cluster.yaml --prod init
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;--prod&lt;/code&gt; option says to provision the system with the shared persistent
+volumes instead of just local host mounts.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;The deployment creates an ingress rule that assumes we are providing the certs
+ourselves. Edit the ingress:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;kubectl edit ingress frontend
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;and remove these lines:&lt;/p&gt;
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;tls:
+  - secretName: reana-ssl-secrets
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Traefik will contact LetsEncrypt and obtain some nice valid certs for this
+domain.&lt;/li&gt;
+  &lt;li&gt;Test out connectivity with:
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;curl -k https://reana.yourdns.name.org/api/ping
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;install-client-and-hello-reana&quot;&gt;Install Client and &lt;em&gt;Hello, Reana&lt;/em&gt;&lt;/h1&gt;
+&lt;p&gt;On your local workstation we are finally going to install the Reana client and
+run a simple workflow on the cluster.&lt;/p&gt;
+
+&lt;p&gt;You need to set environment variables to tell the client how to connect to
+your cluster.&lt;/p&gt;
+
+&lt;p&gt;On the kubernetes master node, issue this command&lt;/p&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-cluster env --include-admin-token
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;There is a &lt;a href=&quot;https://github.com/reanahub/reana-cluster/issues/73&quot;&gt;bug&lt;/a&gt;
+in the reana-cluster cli where it won’t tell us the correct url for our cluster,
+but it can easily figure that out ourselves. Do make a note of the &lt;code class=&quot;highlighter-rouge&quot;&gt;REANA_ACCESS_TOKEN&lt;/code&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;On your local workstation clone the &lt;a href=&quot;https://github.com/reanahub/reana-demo-helloworld&quot;&gt;reana-demo-helloworld&lt;/a&gt;
+repository.&lt;/li&gt;
+  &lt;li&gt;Follow the instructions to install the reana client
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;virtualenv ~/.virtualenvs/myreana
+source ~/.virtualenvs/myreana/bin/activate
+pip install reana-client
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Set the evironment variables. The &lt;code class=&quot;highlighter-rouge&quot;&gt;REANA_ACCESS_TOKEN&lt;/code&gt; can be set with the
+output from the &lt;code class=&quot;highlighter-rouge&quot;&gt;reana-cluster&lt;/code&gt; command run previously. Set the &lt;code class=&quot;highlighter-rouge&quot;&gt;REANA_SERVER_URL&lt;/code&gt;
+as
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;export REANA_SERVER_URL=https://reana.yourdns.name.org
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;From the root of the hello world repo create your analysis
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-client create -n my-analysis
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Set the &lt;code class=&quot;highlighter-rouge&quot;&gt;REANA_WORKON&lt;/code&gt; environment var so you don’t have to specify
+it on every reana-client invocation.
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;export REANA_WORKON=my-analysis
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Upload the python code and the datafile to the cluster.
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-client upload ./data ./code
+reana-client list
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Run the workflow!
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-client start
+reana-client status
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Download the generated files to your workstation
+    &lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;reana-client list
+reana-client download results/greetings.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;next-steps&quot;&gt;Next Steps&lt;/h1&gt;
+&lt;p&gt;Congratulations! You have running Reana cluster with secure remote access.
+Review the documentation at &lt;a href=&quot;https://reana.readthedocs.io/en/latest/&quot;&gt;https://reana.readthedocs.io/en/latest/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;You can also join the &lt;a href=&quot;ttps://gitter.im/reanahub/reana&quot;&gt;gitter&lt;/a&gt; to interact with the development commuity.&lt;/p&gt;
+
+&lt;p&gt;This work has been supported by the NSF and Project &lt;a href=&quot;https://scailfin.github.io&quot;&gt;SCAILFIN&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 23 Jan 2019 23:31:43 -0600</pubDate>
+        <link>http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</link>
+        <guid isPermaLink="true">http://localhost:4000/openstack/reana/hep/scailfin/2019/01/23/ZeroToReanaOnOpenstack.html</guid>
+        
+        
+        <category>openstack</category>
+        
+        <category>reana</category>
+        
+        <category>HEP</category>
+        
+        <category>SCAILFIN</category>
+        
+      </item>
     
       <item>
         <title>Building Tensorflow Docker Image for Openstack</title>
