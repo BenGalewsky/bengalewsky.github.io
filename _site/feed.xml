@@ -5,8 +5,8 @@
     <description>&lt;h1&gt;Development Blog&lt;/h1&gt;&lt;h3&gt;Research Programmer NCSA&lt;/h3&gt;</description>
     <link>http://bengalewsky.github.io/</link>
     <atom:link href="http://bengalewsky.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 04 Dec 2019 16:05:51 -0600</pubDate>
-    <lastBuildDate>Wed, 04 Dec 2019 16:05:51 -0600</lastBuildDate>
+    <pubDate>Thu, 05 Dec 2019 11:20:04 -0600</pubDate>
+    <lastBuildDate>Thu, 05 Dec 2019 11:20:04 -0600</lastBuildDate>
     <generator>Jekyll v3.7.4</generator>
     
       <item>
@@ -21,14 +21,14 @@ role for Parsl in this framework.&lt;/p&gt;
 &lt;p&gt;Yadage and Parsl are both workflow languages and both generate &lt;em&gt;directed
 acyclic graphs&lt;/em&gt; (DAGs). Yadage represents workflows using YAML and dependencies
 are declared in terms of references to other tasks. Parsl uses python to
-describe the workflow. It takes more of dataflow view on dependencies. Tasks
-dependencies are represented as data result futures. The next task is started
-when the dependant data output futures complete.&lt;/p&gt;
+describe the workflow. It takes more of dataflow view on dependencies. Task
+dependencies are represented as data result futures. A task is started
+when its incoming data output futures complete.&lt;/p&gt;
 
 &lt;h2 id=&quot;tasks&quot;&gt;Tasks&lt;/h2&gt;
 &lt;h3 id=&quot;yadage&quot;&gt;Yadage&lt;/h3&gt;
 &lt;p&gt;The atomic unit of the workflow is a packtivity – a packaged activity. It
-represents a single parametrized processing step. The parameters a passed as
+represents a single parametrized processing step. The parameters are passed as
 YAML documents and the processing step is executed using one of multiple
 backends. After processing the packtivity publishes JSON data that includes
 relevant data for further processing (e.g. referencing files that were created
@@ -82,8 +82,9 @@ applications and scripts.&lt;sup&gt;&lt;a href=&quot;https://parsl.readthedocs.i
 &lt;p&gt;A stage consists of two pieces&lt;/p&gt;
 
 &lt;p&gt;A stage body (i.e. its scheduler):
-This section describes the logic how to define new nodes (i.e. packtivities with a specific parameter input) and new edges to attach them to the existing graph. Currently yadage supports two stages, one defining a single node and defining multiple nodes, both of which add edges according to the the data accessed from upstream nodes.
-A predicate (i.e. its dependencies):
+This section describes the logic how to define new nodes (i.e. packtivities with a specific parameter input) and new edges to attach them to the existing graph. Currently yadage supports two stages, one defining a single node and defining multiple nodes, both of which add edges according to the the data accessed from upstream nodes.&lt;/p&gt;
+
+&lt;p&gt;A predicate (i.e. its dependencies):
 The predicate (also referred to as the stage’s dependencies) is a description of when the stage body is ready to be applied. Currently yadage supports a single predicate that takes a number of JSON Path expressions. Each expression selects a number of stages. The dependency is considered satisfied when all packtivities associated to that stage (i.e. nodes) have a published result&lt;sup&gt;&lt;a href=&quot;https://yadage.readthedocs.io/en/latest/definingworkflows.html&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
 
 &lt;h3 id=&quot;parsl-1&quot;&gt;Parsl&lt;/h3&gt;
@@ -105,10 +106,10 @@ The predicate (also referred to as the stage’s dependencies) is a description 
 &lt;td&gt;Parallel workflows &lt;/td&gt;&lt;td&gt; Parallel execution, respecting dependencies among app executions. &lt;/td&gt;&lt;td&gt; Automatically builds parallel DAGs from spec &lt;/td&gt;&lt;td&gt; Automatically generated from App dependencies &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt; Parallel workflows with loops &lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt; Can be implemented with tasks that produce a variable number of data fragments &lt;/td&gt;&lt;td&gt; Just a simple python loop that appends calls to the parsl task &lt;/td&gt;
+&lt;td&gt; Parallel workflows with loops &lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt; Can be implemented with tasks that produce a variable number of data fragments &lt;/td&gt;&lt;td&gt; Just a simple python loop that appends calls to the Parsl task &lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt; Parallel dataflows &lt;/td&gt;&lt;td&gt; Parallel workflows driven by data results, and not task completion &lt;/td&gt;&lt;td&gt; Yadage won't start a new task until all of the outputs from a previous step are complete | Parsl tracks dependencies either by task, or by data future. &lt;/td&gt;&lt;td&gt;Each Parsl data output is represented as a Future. Tasks can be triggered by one or more of these futures completing&lt;/td&gt;
+&lt;td&gt; Parallel dataflows &lt;/td&gt;&lt;td&gt; Parallel workflows driven by data results, and not task completion &lt;/td&gt;&lt;td&gt; Yadage won't start a new task until all of the outputs from a previous step are complete&lt;/td&gt;&lt;td&gt;Parsl tracks dependencies either by task, or by data future. Tasks can be triggered by one or more of these futures completing&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/table&gt;
 &lt;/div&gt;
@@ -136,14 +137,14 @@ specifies which execution provider(s) and executor(s) to use. Parsl provides a
 high level abstraction, called a block, for providing a uniform description of a
 resource configuration irrespective of the specific execution provider.&lt;/p&gt;
 
-&lt;p&gt;The parsl ecosystem includes specific interfaces for running on many of the
+&lt;p&gt;The Parsl ecosystem includes specific interfaces for running on many of the
 popular HTC environments such as Jetstream, Condor, and Slurm. It also has
 interfaces for commercial cloud providers.&lt;/p&gt;
 
 &lt;p&gt;The &lt;code class=&quot;highlighter-rouge&quot;&gt;HighThroughputExecutor&lt;/code&gt; implements hierarchical scheduling and batching and
 consistently delivers high throughput task execution on the order of 1000 Nodes&lt;/p&gt;
 
-&lt;p&gt;Key to this performance is the coupling between the parsl driver program and the
+&lt;p&gt;Key to this performance is the coupling between the Parsl driver program and the
 executors. It depends on the IPython library in the executor image. The
 workflow steps are pickled using &lt;code class=&quot;highlighter-rouge&quot;&gt;CloudPickle&lt;/code&gt; and transmitted.&lt;/p&gt;
 
@@ -167,7 +168,7 @@ be difficult to specify anything more complicated than a few parallel threads.&l
 &lt;p&gt;The Parsl HighThroughputExecutor has received notoriety as a high performance
 workflow execution back-end and can scale to thousands of nodes. Delivering
 this performance requires that Parsl takes control over the execution of the
-code and depends on the presence of the parsl library, iPython and Python3
+code and depends on the presence of the Parsl library, iPython and Python3
 inside any execution environments where it will be run. The versions of these
 dependencies must match the version of the driver program.&lt;/p&gt;
 
